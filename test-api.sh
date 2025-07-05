@@ -5,31 +5,41 @@ API_KEY="SECRET_API_KEY"
 
 echo "=== Testing Product API ==="
 
-# Test root endpoint
+# 1. Test root endpoint
+echo -n "Root endpoint: "
 curl -s "$BASE_URL"
 
-# Test get all products
-curl -s "$BASE_URL/api/products"
-
-# Test get single product
-curl -s "$BASE_URL/api/products/1"
-
-# Test create product (authenticated)
+# 2. Test product creation
+echo -e "\n\nCreating product:"
 curl -s -X POST "$BASE_URL/api/products" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: $API_KEY" \
-  -d '{"name":"Test Product","price":19.99,"category":"test"}'
+  -d '{"name":"Test Product","price":19.99,"category":"test"}' | jq
 
-# Test search
-curl -s "$BASE_URL/api/products/search?q=coffee"
+# 3. Test listing products
+echo -e "\nAll products:"
+curl -s "$BASE_URL/api/products" | jq '.data[0]'
 
-# Test statistics
-curl -s "$BASE_URL/api/products/stats"
+# 4. Test search
+echo -e "\nSearch results:"
+curl -s "$BASE_URL/api/products/search?q=test" | jq
 
-# Test invalid request
+# 5. Test statistics
+echo -e "\nProduct statistics:"
+curl -s "$BASE_URL/api/products/stats" | jq
+
+# 6. Test authentication failure
+echo -e "\nAuthentication test (should fail):"
 curl -s -X POST "$BASE_URL/api/products" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: invalid-key" \
-  -d '{}'
+  -d '{"name":"Should Fail"}' | jq
+
+# 7. Test validation failure
+echo -e "\nValidation test (should fail):"
+curl -s -X POST "$BASE_URL/api/products" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: $API_KEY" \
+  -d '{"price": -10}' | jq
 
 echo "=== Tests completed ==="
